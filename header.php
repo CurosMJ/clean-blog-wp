@@ -19,8 +19,20 @@
     <link href="http://maxcdn.bootstrapcdn.com/font-awesome/4.1.0/css/font-awesome.min.css" rel="stylesheet" type="text/css">
     <link href='http://fonts.googleapis.com/css?family=Lora:400,700,400italic,700italic' rel='stylesheet' type='text/css'>
     <link href='http://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800' rel='stylesheet' type='text/css'>
-    <?php if(is_admin_bar_showing()){?>
-    <style>
+    <style type="text/css">
+    <?php
+    if( is_single() && has_post_thumbnail() )
+    {
+        $headerImage = get_the_post_thumbnail();
+        $matches = null;
+        preg_match('/src=[\'"](?P<url>[^\'"]*)[\'"]/',$headerImage,$matches);
+        $headerImage = $matches['url'];
+    }
+    else
+        $headerImage = get_header_image();
+    $headerColor = get_theme_mod('header_color','#333');
+    if(is_admin_bar_showing()):
+    ?>
     .navbar-custom
     {
         top:32px;
@@ -29,8 +41,24 @@
     {
         top:-29px;
     }
+    <?php endif; ?>
+    #header 
+    { 
+        <?php if($headerImage == ''): ?>
+            background-color: <?php echo $headerColor; ?>;
+        <?php else: ?>
+            background-image: url('<?php echo $headerImage; ?>');
+        <?php endif; ?>
+    }
+    .pager.next
+    {
+        float:right;
+    }
+    .pager.prev
+    {
+        float:right;
+    }
     </style>
-    <?php }?>
     <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
     <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
     <!--[if lt IE 9]>
@@ -58,20 +86,14 @@
 
             <!-- Collect the nav links, forms, and other content for toggling -->
             <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
-                <ul class="nav navbar-nav navbar-right">
-                    <li>
-                        <a href="index.html">Home</a>
-                    </li>
-                    <li>
-                        <a href="about.html">About</a>
-                    </li>
-                    <li>
-                        <a href="post.html">Sample Post</a>
-                    </li>
-                    <li>
-                        <a href="contact.html">Contact</a>
-                    </li>
-                </ul>
+                    <?php 
+                    wp_nav_menu(array(
+                        'theme_location' => 'primary',
+                        'container' => false,
+                        'menu_class' => 'nav navbar-nav navbar-right',
+                        'before' => "<li>",
+                        'after' => '</li>'));
+                    ?>
             </div>
             <!-- /.navbar-collapse -->
         </div>
@@ -84,25 +106,31 @@
     {
         the_post();
         $heading = get_the_title();
-        $desc = get_the_excerpt();
-        
+        $headingClass = 'post-heading';
+    }
+    else if ( is_page() )
+    {
+        the_post();
+        $heading = get_the_title();
+        $headingClass = 'page-heading';
     }
     else
     {
         $heading = get_bloginfo('name');
         $desc = get_bloginfo('description');
+        $headingClass = 'site-heading';
     }
     ?>
     <header class="intro-header" id="header">
         <div class="container">
             <div class="row">
                 <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
-                    <div class="<?php echo is_single()?'post':'site'; ?>-heading">
+                    <div class="<?php echo $headingClass; ?>">
                         <h1><?php echo $heading ?></h1>
                         <?php if ( ! is_single() ): ?>
                             <hr class="small">
+                            <span class="subheading"><?php if( ! is_page() ) echo $desc; ?></span>
                         <?php endif;?>
-                        <span class="subheading"><?php echo $desc; ?></span>
                         <?php if ( is_single() ): ?>
                         <span class="meta">Posted by <a href="<?php the_author_link(); ?>"><?php the_author(); ?></a> on <?php the_time( get_option( 'date-format' ) ); ?></span>
                         <?php endif; ?>
